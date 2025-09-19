@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.15/theme/monokai.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown Editor</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <div class="editor-container">
+      <div class="editor-pane">
+        <h2>Markdown</h2>
+        <textarea id="markdown-input" placeholder="Type your markdown here..."></textarea>
+      </div>
+      <div class="preview-pane">
+        <h2>Preview</h2>
+        <div id="preview-output"></div>
+      </div>
+    </div>
+  </body>
+</html>
