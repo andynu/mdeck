@@ -256,6 +256,25 @@ h2 {
   cursor: not-allowed;
 }
 
+.mini-toggle {
+  padding: 6px 12px;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.mini-toggle:hover {
+  background: #7c3aed;
+}
+
+.mini-toggle.active {
+  background: #a78bfa;
+}
+
 .hidden {
   display: none !important;
 }
@@ -447,4 +466,118 @@ h2 {
   20% { opacity: 1; transform: translateY(0); }
   80% { opacity: 1; transform: translateY(0); }
   100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* Mini Presentation Mode Styles */
+.preview-pane.mini-presentation-mode {
+  flex: 1 1 100%;
+  background: #1a1a1a;
+}
+
+.mini-presentation-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-slide-content {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.mini-slide-content h1 {
+  font-size: 2.5em;
+  color: #569cd6;
+  text-align: center;
+  margin-bottom: 0.5em;
+  border-bottom: 2px solid #3e3e3e;
+  padding-bottom: 0.3em;
+}
+
+.mini-slide-content h2 {
+  font-size: 2em;
+  color: #4ec9b0;
+  text-align: center;
+  margin: 0.5em 0;
+}
+
+.mini-slide-content h3 {
+  font-size: 1.6em;
+  color: #c586c0;
+  text-align: center;
+  margin: 0.5em 0;
+}
+
+.mini-slide-content p {
+  font-size: 1.2em;
+  line-height: 1.6;
+  margin-bottom: 1em;
+}
+
+.mini-slide-content ul, .mini-slide-content ol {
+  font-size: 1.1em;
+  line-height: 1.8;
+  margin-left: 30px;
+  margin-bottom: 1em;
+}
+
+.mini-slide-content code {
+  font-size: 1em;
+  padding: 3px 6px;
+}
+
+.mini-slide-content pre {
+  font-size: 1em;
+  padding: 15px;
+  margin: 15px 0;
+}
+
+.mini-slide-content img {
+  max-width: 70%;
+  height: auto;
+  display: block;
+  margin: 20px auto;
+}
+
+.mini-slide-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 10px;
+  background: rgba(45, 45, 48, 0.95);
+  border-top: 1px solid #3e3e3e;
+}
+
+.mini-nav-btn {
+  padding: 6px 12px;
+  background: #3c3c3c;
+  color: #d4d4d4;
+  border: 1px solid #5a5a5a;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.mini-nav-btn:hover:not(:disabled) {
+  background: #4a4a4a;
+  border-color: #007acc;
+}
+
+.mini-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mini-slide-counter {
+  font-size: 12px;
+  color: #9cdcfe;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
 }

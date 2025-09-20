@@ -12,6 +12,7 @@ let isPresentation = false;
 let currentFilePath = null;
 let markedRenderer = null;
 let isPreviewVisible = true;
+let isMiniPresentation = false;
 
 function parseSlides(markdown) {
   const slideDelimiter = /^---+$/gm;
@@ -43,9 +44,45 @@ function updatePreview() {
       currentSlide = Math.max(0, slides.length - 1);
     }
     renderSlide(currentSlide);
+  } else if (isMiniPresentation) {
+    slides = parseSlides(markdown);
+    if (currentSlide >= slides.length) {
+      currentSlide = Math.max(0, slides.length - 1);
+    }
+    renderMiniSlide(currentSlide);
   } else {
     const html = markedRenderer ? marked.parse(markdown, { renderer: markedRenderer }) : marked.parse(markdown);
     previewOutput.innerHTML = html;
+  }
+}
+
+function renderMiniSlide(slideIndex) {
+  if (slideIndex < 0 || slideIndex >= slides.length) return;
+
+  const slideMarkdown = slides[slideIndex];
+  const html = markedRenderer ? marked.parse(slideMarkdown, { renderer: markedRenderer }) : marked.parse(slideMarkdown);
+
+  // Create mini slide container with navigation
+  previewOutput.innerHTML = `
+    <div class="mini-presentation-container">
+      <div class="mini-slide-content">
+        ${html}
+      </div>
+      <div class="mini-slide-controls">
+        <button class="mini-nav-btn" onclick="navigateMiniSlide(-1)" ${slideIndex === 0 ? 'disabled' : ''}>◀</button>
+        <span class="mini-slide-counter">${slideIndex + 1} / ${slides.length}</span>
+        <button class="mini-nav-btn" onclick="navigateMiniSlide(1)" ${slideIndex === slides.length - 1 ? 'disabled' : ''}>▶</button>
+      </div>
+    </div>
+  `;
+
+  currentSlide = slideIndex;
+}
+
+function navigateMiniSlide(direction) {
+  const newSlide = currentSlide + direction;
+  if (newSlide >= 0 && newSlide < slides.length) {
+    renderMiniSlide(newSlide);
   }
 }
 
@@ -291,6 +328,44 @@ function togglePreview() {
   }
 }
 
+function toggleMiniPresentation() {
+  isMiniPresentation = !isMiniPresentation;
+  const miniBtn = document.getElementById('mini-mode');
+  const editorPane = document.querySelector('.editor-pane');
+  const previewPane = document.querySelector('.preview-pane');
+
+  if (isMiniPresentation) {
+    // Hide editor, show only preview with mini presentation
+    editorPane.classList.add('hidden');
+    previewPane.classList.remove('hidden');
+    previewPane.classList.add('mini-presentation-mode');
+    miniBtn.classList.add('active');
+    miniBtn.title = 'Exit Mini Presentation (Ctrl+M)';
+
+    // Initialize slides and render first one
+    slides = parseSlides(markdownInput.value);
+    currentSlide = 0;
+    renderMiniSlide(currentSlide);
+  } else {
+    // Restore normal view
+    editorPane.classList.remove('hidden');
+    previewPane.classList.remove('mini-presentation-mode');
+    miniBtn.classList.remove('active');
+    miniBtn.title = 'Mini Presentation (Ctrl+M)';
+
+    // Restore preview visibility state
+    if (!isPreviewVisible) {
+      previewPane.classList.add('hidden');
+      editorPane.classList.add('full-width');
+    }
+
+    updatePreview();
+  }
+}
+
+// Make navigateMiniSlide global so onclick handlers work
+window.navigateMiniSlide = navigateMiniSlide;
+
 async function exportToPDF() {
   const exportBtn = document.getElementById('export-pdf');
   exportBtn.disabled = true;
@@ -489,12 +564,28 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById('export-pdf').addEventListener('click', exportToPDF);
   document.getElementById('open-file').addEventListener('click', openFile);
   document.getElementById('toggle-preview').addEventListener('click', togglePreview);
+  document.getElementById('mini-mode').addEventListener('click', toggleMiniPresentation);
 
   document.addEventListener('keydown', (e) => {
-    // Add Ctrl+Shift+P to toggle preview
+    // Add keyboard shortcuts
     if (e.ctrlKey && e.shiftKey && e.key === 'P') {
       e.preventDefault();
       togglePreview();
+    } else if (e.ctrlKey && e.key === 'm') {
+      e.preventDefault();
+      toggleMiniPresentation();
+    } else if (isMiniPresentation) {
+      // Handle navigation in mini mode
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        navigateMiniSlide(-1);
+      } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+        e.preventDefault();
+        navigateMiniSlide(1);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        toggleMiniPresentation();
+      }
     } else {
       handleKeyNavigation(e);
     }
