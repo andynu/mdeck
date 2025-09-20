@@ -183,8 +183,14 @@ h2 {
   background: #5a5a5a;
 }
 
-.mode-toggle {
+.header-buttons {
+  display: flex;
+  gap: 8px;
   margin-right: 16px;
+}
+
+.export-btn,
+.mode-toggle {
   padding: 6px 12px;
   background: #007acc;
   color: white;
@@ -195,12 +201,26 @@ h2 {
   transition: background 0.2s;
 }
 
+.export-btn:hover,
 .mode-toggle:hover {
   background: #005a9e;
 }
 
 .mode-toggle.active {
   background: #4ec9b0;
+}
+
+.export-btn {
+  background: #6c757d;
+}
+
+.export-btn:hover {
+  background: #5a6268;
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .hidden {

@@ -1,4 +1,6 @@
 import { marked } from 'marked';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 let markdownInput;
 let previewOutput;
@@ -95,6 +97,109 @@ function handleKeyNavigation(e) {
   }
 }
 
+async function exportToPDF() {
+  const exportBtn = document.getElementById('export-pdf');
+  exportBtn.disabled = true;
+  exportBtn.textContent = 'Generating PDF...';
+
+  try {
+    const pdf = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    const markdown = markdownInput.value;
+    const slideTexts = parseSlides(markdown);
+
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.width = '1024px';
+    tempContainer.style.padding = '40px';
+    tempContainer.style.background = 'white';
+    document.body.appendChild(tempContainer);
+
+    for (let i = 0; i < slideTexts.length; i++) {
+      if (i > 0) {
+        pdf.addPage();
+      }
+
+      tempContainer.innerHTML = `
+        <div style="
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+          color: #333;
+          line-height: 1.6;
+          min-height: 600px;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        ">
+          ${marked(slideTexts[i])}
+        </div>
+      `;
+
+      const headings = tempContainer.querySelectorAll('h1, h2, h3');
+      headings.forEach(h => {
+        h.style.textAlign = 'center';
+        h.style.marginBottom = '20px';
+      });
+
+      tempContainer.querySelectorAll('img').forEach(img => {
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
+        img.style.margin = '20px auto';
+      });
+
+      tempContainer.querySelectorAll('pre').forEach(pre => {
+        pre.style.background = '#f5f5f5';
+        pre.style.padding = '15px';
+        pre.style.borderRadius = '5px';
+        pre.style.overflow = 'auto';
+      });
+
+      tempContainer.querySelectorAll('code').forEach(code => {
+        if (!code.parentElement.matches('pre')) {
+          code.style.background = '#f5f5f5';
+          code.style.padding = '2px 5px';
+          code.style.borderRadius = '3px';
+        }
+      });
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(tempContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 297;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pageHeight = 210;
+      const verticalMargin = (pageHeight - Math.min(imgHeight, pageHeight - 20)) / 2;
+
+      pdf.addImage(imgData, 'PNG', 0, verticalMargin, imgWidth, Math.min(imgHeight, pageHeight - 20));
+    }
+
+    document.body.removeChild(tempContainer);
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    pdf.save(`presentation_${timestamp}.pdf`);
+
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Error generating PDF. Please check the console for details.');
+  } finally {
+    exportBtn.disabled = false;
+    exportBtn.textContent = 'Export PDF';
+  }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
   markdownInput = document.querySelector("#markdown-input");
   previewOutput = document.querySelector("#preview-output");
@@ -106,6 +211,7 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById('toggle-mode').addEventListener('click', togglePresentationMode);
   document.getElementById('prev-slide').addEventListener('click', () => renderSlide(currentSlide - 1));
   document.getElementById('next-slide').addEventListener('click', () => renderSlide(currentSlide + 1));
+  document.getElementById('export-pdf').addEventListener('click', exportToPDF);
 
   document.addEventListener('keydown', handleKeyNavigation);
 
