@@ -667,6 +667,26 @@ window.addEventListener("DOMContentLoaded", () => {
       handleKeyNavigation(e);
     }
   });
+
+  // Add wheel navigation for mini presentation mode
+  previewOutput.addEventListener('wheel', (e) => {
+    if (!isMiniPresentation) return;
+
+    e.preventDefault();
+
+    // Debounce wheel events to avoid too rapid scrolling
+    if (previewOutput.wheelTimeout) return;
+    previewOutput.wheelTimeout = true;
+    setTimeout(() => { previewOutput.wheelTimeout = false; }, 300);
+
+    if (e.deltaY > 0) {
+      // Scrolling down - next slide
+      navigateMiniSlide(1);
+    } else if (e.deltaY < 0) {
+      // Scrolling up - previous slide
+      navigateMiniSlide(-1);
+    }
+  }, { passive: false });
   document.addEventListener('wheel', handleWheelNavigation, { passive: false });
 
   // Handle fullscreen changes (e.g., user presses ESC to exit fullscreen)
