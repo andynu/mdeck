@@ -133,6 +133,20 @@ Use three dashes (---) to separate slides
 
 ---
 
+## Images Support
+
+You can include images using markdown syntax:
+
+![Tauri Logo](./test-image.svg)
+
+Images work with relative paths from the markdown file location.
+
+You can also use images from the assets folder:
+
+![JavaScript Logo](./assets/javascript.svg)
+
+---
+
 ## Creating Slides
 
 Just add horizontal rules to split your content:
