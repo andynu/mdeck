@@ -5,7 +5,9 @@ A powerful markdown editor with live preview and presentation mode, built with T
 ## Features
 
 - **Live Markdown Preview** - See your markdown rendered in real-time as you type
+- **File Open Dialog** - Load markdown files directly from your file system
 - **Fullscreen Presentation Mode** - Convert your markdown into beautiful presentations
+- **PDF Export** - Export your presentations to PDF format
 - **Slide Navigation** - Multiple ways to navigate through your slides:
   - Keyboard: Arrow keys, Space, Page Up/Down, Home/End
   - Mouse: Scroll wheel
@@ -36,10 +38,17 @@ git clone <repository-url>
 cd mdeck-eb91
 ```
 
-2. Install dependencies:
+2. Install Node.js dependencies:
 ```bash
 npm install
 ```
+
+3. Install the Tauri dialog plugin (for file picker functionality):
+```bash
+npm install @tauri-apps/plugin-dialog
+```
+
+The Rust dependencies (including `tauri-plugin-dialog`) will be automatically installed when you first run the development server.
 
 ## Development
 
@@ -70,6 +79,10 @@ The built application will be located in:
 
 ## Usage
 
+### Opening Files
+
+Click the "Open File" button in the header to load an existing markdown file into the editor. The file picker will filter for `.md` and `.markdown` files.
+
 ### Creating Presentations
 
 1. Write your content in markdown in the left pane
@@ -86,6 +99,10 @@ The built application will be located in:
   - Last slide: `End`
 - **Toggle Fullscreen**: Press `F`
 - **Exit Presentation**: Press `Escape` or click "Exit Fullscreen"
+
+### Exporting to PDF
+
+Click the "Export PDF" button to save your presentation as a PDF file. Each slide will be rendered as a separate page with professional formatting.
 
 ### Example Markdown
 

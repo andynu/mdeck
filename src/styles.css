@@ -189,6 +189,7 @@ h2 {
   margin-right: 16px;
 }
 
+.open-btn,
 .export-btn,
 .mode-toggle {
   padding: 6px 12px;
@@ -201,6 +202,7 @@ h2 {
   transition: background 0.2s;
 }
 
+.open-btn:hover,
 .export-btn:hover,
 .mode-toggle:hover {
   background: #005a9e;

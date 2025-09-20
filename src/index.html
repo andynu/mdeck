@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="/tauri-dialog.js"></script>
     <script src="/main.js" defer></script>
   </head>
 
@@ -23,6 +24,7 @@
         <div class="preview-header">
           <h2>Preview</h2>
           <div class="header-buttons">
+            <button id="open-file" class="open-btn">Open File</button>
             <button id="export-pdf" class="export-btn">Export PDF</button>
             <button id="toggle-mode" class="mode-toggle">Presentation Mode</button>
           </div>

@@ -1,4 +1,5 @@
 // marked, jsPDF and html2canvas are loaded globally from CDN
+const { invoke } = window.__TAURI__.core;
 
 let markdownInput;
 let previewOutput;
@@ -161,6 +162,27 @@ function handleWheelNavigation(e) {
     if (currentSlide > 0) {
       renderSlide(currentSlide - 1);
     }
+  }
+}
+
+async function openFile() {
+  try {
+    const selected = await window.TauriDialog.open({
+      multiple: false,
+      filters: [{
+        name: 'Markdown',
+        extensions: ['md', 'markdown']
+      }]
+    });
+
+    if (selected) {
+      const content = await invoke('read_file', { path: selected });
+      markdownInput.value = content;
+      updatePreview();
+    }
+  } catch (error) {
+    console.error('Error opening file:', error);
+    alert('Error opening file: ' + error);
   }
 }
 
@@ -343,6 +365,7 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById('prev-slide').addEventListener('click', () => renderSlide(currentSlide - 1));
   document.getElementById('next-slide').addEventListener('click', () => renderSlide(currentSlide + 1));
   document.getElementById('export-pdf').addEventListener('click', exportToPDF);
+  document.getElementById('open-file').addEventListener('click', openFile);
 
   document.addEventListener('keydown', handleKeyNavigation);
   document.addEventListener('wheel', handleWheelNavigation, { passive: false });
