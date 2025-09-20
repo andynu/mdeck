@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "mdeck",
   "version": "0.1.0",
-  "identifier": "com.andy.tauri-app",
+  "identifier": "com.andy.mdeck",
   "build": {
     "frontendDist": "../src"
   },
@@ -10,7 +10,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "tauri-app",
+        "title": "mdeck",
         "width": 800,
         "height": 600
       }

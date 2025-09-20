@@ -1,11 +1,15 @@
 # MDeck - Markdown Presentation Editor
 
+> [!NOTE]
+> This entire project was generated with Claude, an AI assistant by Anthropic.
+
 A powerful markdown editor with live preview and presentation mode, built with Tauri.
 
 ## Features
 
 - **Live Markdown Preview** - See your markdown rendered in real-time as you type
-- **File Open Dialog** - Load markdown files directly from your file system
+- **Command-Line File Opening** - Open markdown files directly from the terminal
+- **File Open Dialog** - Load markdown files through the UI file picker
 - **Fullscreen Presentation Mode** - Convert your markdown into beautiful presentations
 - **PDF Export** - Export your presentations to PDF format
 - **Slide Navigation** - Multiple ways to navigate through your slides:
@@ -32,10 +36,12 @@ Before you begin, ensure you have the following installed:
 
 ## Installation
 
+### From Source
+
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd mdeck-eb91
+cd mdeck
 ```
 
 2. Install Node.js dependencies:
@@ -43,12 +49,26 @@ cd mdeck-eb91
 npm install
 ```
 
-3. Install the Tauri dialog plugin (for file picker functionality):
+3. Build the application:
 ```bash
-npm install @tauri-apps/plugin-dialog
+npm run tauri build
 ```
 
-The Rust dependencies (including `tauri-plugin-dialog`) will be automatically installed when you first run the development server.
+4. Install the built application:
+   - **macOS**: Move `src-tauri/target/release/bundle/macos/mdeck.app` to `/Applications/`
+   - **Windows**: Run the installer from `src-tauri/target/release/bundle/msi/mdeck.msi`
+   - **Linux**:
+     - AppImage: Make executable with `chmod +x mdeck.AppImage` and run directly
+     - Debian/Ubuntu: Install with `sudo dpkg -i mdeck.deb`
+     - Or copy the binary: `sudo cp src-tauri/target/release/mdeck /usr/local/bin/`
+
+### Quick Install (Linux/macOS)
+
+For a system-wide installation of just the binary:
+```bash
+npm run tauri build
+sudo cp src-tauri/target/release/mdeck /usr/local/bin/
+```
 
 ## Development
 
@@ -73,13 +93,31 @@ npm run tauri build
 ```
 
 The built application will be located in:
-- **macOS**: `src-tauri/target/release/bundle/macos/`
-- **Windows**: `src-tauri/target/release/bundle/msi/` or `/nsis/`
-- **Linux**: `src-tauri/target/release/bundle/appimage/` or `/deb/`
+- **macOS**: `src-tauri/target/release/bundle/macos/mdeck.app`
+- **Windows**: `src-tauri/target/release/bundle/msi/` or `/nsis/` (mdeck.msi or mdeck.exe installer)
+- **Linux**: `src-tauri/target/release/bundle/appimage/mdeck.AppImage` or `/deb/mdeck.deb`
+
+The standalone binary (without installer) can be found at:
+- **All platforms**: `src-tauri/target/release/mdeck` (or `mdeck.exe` on Windows)
 
 ## Usage
 
-### Opening Files
+### Command-Line Usage
+
+Open a markdown file directly when launching the application:
+
+```bash
+# If installed globally
+mdeck path/to/your/presentation.md
+
+# Or using the full path to the binary
+/usr/local/bin/mdeck ~/Documents/slides.md
+
+# On Windows
+mdeck.exe C:\Users\YourName\Documents\presentation.md
+```
+
+### Opening Files from the UI
 
 Click the "Open File" button in the header to load an existing markdown file into the editor. The file picker will filter for `.md` and `.markdown` files.
 
@@ -130,7 +168,7 @@ Thank you!
 ## Project Structure
 
 ```
-mdeck-eb91/
+mdeck/
 ├── src/                    # Frontend source files
 │   ├── index.html         # Main HTML file
 │   ├── main.js            # JavaScript logic
