@@ -627,7 +627,7 @@ async function exportToPDF() {
   }
 }
 
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   markdownInput = document.querySelector("#markdown-input");
   previewOutput = document.querySelector("#preview-output");
   presentationView = document.querySelector("#presentation-view");
@@ -809,8 +809,51 @@ console.log("Hello from Tauri!");
 
 Toggle between **Editor Mode** and **Presentation Mode** using the button above!`;
 
-  markdownInput.value = initialContent;
-  updatePreview();
+  // Listen for initial file from command line argument
+  const unlistenInitial = await listen('load-initial-file', async (event) => {
+    console.log('Loading initial file from command line:', event.payload.path);
+    await loadFileContent(event.payload.path);
+
+    // Start watching the file
+    if (fileChangeUnlistener) {
+      fileChangeUnlistener();
+      fileChangeUnlistener = null;
+    }
+    await invoke('start_watching_file', { filePath: event.payload.path });
+
+    // Listen for file changes
+    fileChangeUnlistener = await listen('file-changed', async (event) => {
+      console.log('File changed, reloading...', event.payload);
+
+      // Store current cursor position and scroll position
+      const cursorPos = markdownInput.selectionStart;
+      const scrollPos = markdownInput.scrollTop;
+      const previewScrollPos = previewOutput.scrollTop;
+
+      // Reload the file content
+      await loadFileContent(event.payload);
+
+      // Restore cursor and scroll positions
+      markdownInput.selectionStart = cursorPos;
+      markdownInput.selectionEnd = cursorPos;
+      markdownInput.scrollTop = scrollPos;
+      previewOutput.scrollTop = previewScrollPos;
+
+      // Show a subtle notification
+      showReloadNotification();
+    });
+
+    // Unsubscribe from initial file event after first load
+    unlistenInitial();
+  });
+
+  // Set default content if no file is loaded from command line
+  setTimeout(() => {
+    if (!currentFilePath) {
+      markdownInput.value = initialContent;
+      updatePreview();
+    }
+  }, 1000);
 
   // Clean up file watcher when closing
   window.addEventListener('beforeunload', async () => {

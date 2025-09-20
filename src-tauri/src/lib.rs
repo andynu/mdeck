@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+use std::env;
 use tauri::command;
 use tauri::{AppHandle, Emitter, Manager};
 use notify::{Watcher, RecursiveMode, Event};
@@ -46,6 +47,12 @@ fn resolve_path(base_path: String, relative_path: String) -> Result<String, Stri
 
 struct WatcherState(Mutex<Option<notify::RecommendedWatcher>>);
 
+#[derive(Clone, serde::Serialize)]
+struct InitialFilePayload {
+    path: String,
+    content: String,
+}
+
 #[command]
 fn start_watching_file(app: AppHandle, file_path: String) -> Result<(), String> {
     let state = app.state::<WatcherState>();
@@ -89,6 +96,37 @@ fn stop_watching_file(app: AppHandle) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Get command line arguments
+    let args: Vec<String> = env::args().collect();
+
+    // Check if a file path was provided as argument
+    let initial_file = if args.len() > 1 {
+        let file_path = &args[1];
+        let absolute_path = if Path::new(file_path).is_absolute() {
+            file_path.clone()
+        } else {
+            // Convert relative path to absolute
+            match env::current_dir() {
+                Ok(cwd) => cwd.join(file_path).to_string_lossy().to_string(),
+                Err(_) => file_path.clone(),
+            }
+        };
+
+        // Try to read the file content
+        match fs::read_to_string(&absolute_path) {
+            Ok(content) => Some(InitialFilePayload {
+                path: absolute_path.clone(),
+                content,
+            }),
+            Err(e) => {
+                eprintln!("Failed to read initial file '{}': {}", absolute_path, e);
+                None
+            }
+        }
+    } else {
+        None
+    };
+
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
@@ -100,6 +138,18 @@ pub fn run() {
             start_watching_file,
             stop_watching_file
         ])
+        .setup(move |app| {
+            // If we have an initial file, emit an event after the window is ready
+            if let Some(file_data) = initial_file {
+                let app_handle = app.handle().clone();
+                // Use a small delay to ensure the frontend is ready
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+                    let _ = app_handle.emit("load-initial-file", file_data);
+                });
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
