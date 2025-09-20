@@ -9,6 +9,8 @@ let updateTimer;
 let slides = [];
 let currentSlide = 0;
 let isPresentation = false;
+let currentFilePath = null;
+let markedRenderer = null;
 
 function parseSlides(markdown) {
   const slideDelimiter = /^---+$/gm;
@@ -20,7 +22,7 @@ function renderSlide(slideIndex) {
   if (slideIndex < 0 || slideIndex >= slides.length) return;
 
   const slideMarkdown = slides[slideIndex];
-  const html = marked.parse(slideMarkdown);
+  const html = markedRenderer ? marked.parse(slideMarkdown, { renderer: markedRenderer }) : marked.parse(slideMarkdown);
   slideContent.innerHTML = html;
 
   document.getElementById('slide-number').textContent = `${slideIndex + 1} / ${slides.length}`;
@@ -41,7 +43,7 @@ function updatePreview() {
     }
     renderSlide(currentSlide);
   } else {
-    const html = marked.parse(markdown);
+    const html = markedRenderer ? marked.parse(markdown, { renderer: markedRenderer }) : marked.parse(markdown);
     previewOutput.innerHTML = html;
   }
 }
@@ -177,8 +179,70 @@ async function openFile() {
 
     if (selected) {
       const content = await invoke('read_file', { path: selected });
-      markdownInput.value = content;
-      updatePreview();
+      currentFilePath = selected;
+
+      // Create a custom renderer for handling image paths
+      markedRenderer = new marked.Renderer();
+
+      // Store resolved image paths
+      const imagePathMap = new Map();
+
+      // First, pre-process all images in the markdown to resolve their paths
+      const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+      const matches = [...content.matchAll(imageRegex)];
+
+      const pathPromises = matches.map(match => {
+        const imagePath = match[2];
+        // Only process relative paths
+        if (imagePath && !imagePath.match(/^(https?:\/\/|data:|\/)/)) {
+          return invoke('resolve_path', {
+            basePath: currentFilePath,
+            relativePath: imagePath
+          }).then(resolvedPath => {
+            // Read the image and convert to base64 data URL
+            return invoke('read_image_as_base64', { path: resolvedPath });
+          }).then(dataUrl => {
+            imagePathMap.set(imagePath, dataUrl);
+            console.log('Loaded image:', imagePath, '(as data URL)');
+          }).catch(err => {
+            console.error('Failed to load image:', imagePath, err);
+          });
+        }
+        return Promise.resolve();
+      });
+
+      // Wait for all paths to be resolved before rendering
+      Promise.all(pathPromises).then(() => {
+        // Now render with resolved paths
+        markedRenderer.image = function(href, title, text) {
+          // Handle marked.js passing objects
+          if (typeof href === 'object' && href !== null) {
+            if (href.href) {
+              href = href.href;
+            } else {
+              return '';
+            }
+          }
+
+          // Check if we have a resolved path for this image
+          if (imagePathMap.has(href)) {
+            const resolvedUrl = imagePathMap.get(href);
+            console.log('Rendering image:', href);
+            // Return the img tag with the resolved file:// URL
+            const altText = text || '';
+            const titleAttr = title ? ` title="${title}"` : '';
+            return `<img src="${resolvedUrl}" alt="${altText}"${titleAttr}>`;
+          }
+
+          // For absolute URLs or data URLs, use the original href
+          const altText = text || '';
+          const titleAttr = title ? ` title="${title}"` : '';
+          return `<img src="${href}" alt="${altText}"${titleAttr}>`;
+        };
+
+        markdownInput.value = content;
+        updatePreview();
+      });
     }
   } catch (error) {
     console.error('Error opening file:', error);
@@ -224,7 +288,7 @@ async function exportToPDF() {
           flex-direction: column;
           justify-content: center;
         ">
-          ${marked.parse(slideTexts[i])}
+          ${markedRenderer ? marked.parse(slideTexts[i], { renderer: markedRenderer }) : marked.parse(slideTexts[i])}
         </div>
       `;
 
