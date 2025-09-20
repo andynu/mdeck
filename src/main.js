@@ -325,6 +325,23 @@ async function exportToPDF() {
         img.style.margin = '20px auto';
       });
 
+      tempContainer.querySelectorAll('ul, ol').forEach(list => {
+        list.style.marginLeft = '20px';
+        list.style.marginBottom = '16px';
+        list.style.paddingLeft = '20px';
+      });
+
+      tempContainer.querySelectorAll('li').forEach(li => {
+        li.style.marginBottom = '8px';
+        li.style.lineHeight = '1.6';
+      });
+
+      tempContainer.querySelectorAll('ul ul, ol ol, ul ol, ol ul').forEach(nestedList => {
+        nestedList.style.marginLeft = '20px';
+        nestedList.style.marginTop = '8px';
+        nestedList.style.marginBottom = '8px';
+      });
+
       tempContainer.querySelectorAll('pre').forEach(pre => {
         pre.style.background = '#f5f5f5';
         pre.style.padding = '15px';
