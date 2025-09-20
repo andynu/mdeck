@@ -71,12 +71,23 @@ function renderMiniSlide(slideIndex) {
         ${html}
       </div>
       <div class="mini-slide-controls">
-        <button class="mini-nav-btn" onclick="navigateMiniSlide(-1)" ${slideIndex === 0 ? 'disabled' : ''}>◀</button>
+        <button class="mini-nav-btn mini-prev-btn" data-direction="-1" ${slideIndex === 0 ? 'disabled' : ''}>◀</button>
         <span class="mini-slide-counter">${slideIndex + 1} / ${slides.length}</span>
-        <button class="mini-nav-btn" onclick="navigateMiniSlide(1)" ${slideIndex === slides.length - 1 ? 'disabled' : ''}>▶</button>
+        <button class="mini-nav-btn mini-next-btn" data-direction="1" ${slideIndex === slides.length - 1 ? 'disabled' : ''}>▶</button>
       </div>
     </div>
   `;
+
+  // Add event listeners to the navigation buttons
+  const prevBtn = previewOutput.querySelector('.mini-prev-btn');
+  const nextBtn = previewOutput.querySelector('.mini-next-btn');
+
+  if (prevBtn && !prevBtn.disabled) {
+    prevBtn.addEventListener('click', () => navigateMiniSlide(-1));
+  }
+  if (nextBtn && !nextBtn.disabled) {
+    nextBtn.addEventListener('click', () => navigateMiniSlide(1));
+  }
 
   currentSlide = slideIndex;
 }
@@ -440,8 +451,6 @@ function toggleMiniPresentation() {
   }
 }
 
-// Make navigateMiniSlide global so onclick handlers work
-window.navigateMiniSlide = navigateMiniSlide;
 
 async function exportToPDF() {
   const exportBtn = document.getElementById('export-pdf');
