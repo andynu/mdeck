@@ -17,7 +17,7 @@ let isMiniPresentation = false;
 let fileChangeUnlistener = null;
 
 function parseSlides(markdown) {
-  const slideDelimiter = /^---+$/gm;
+  const slideDelimiter = /^---+\s*$/gm;
   const rawSlides = markdown.split(slideDelimiter);
   return rawSlides.filter(slide => slide.trim().length > 0);
 }
