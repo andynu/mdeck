@@ -230,45 +230,23 @@ h2 {
 }
 
 .presentation-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #1e1e1e;
-}
-
-/* Fullscreen styles */
-:fullscreen .presentation-view,
-:-webkit-full-screen .presentation-view,
-:-moz-full-screen .presentation-view,
-:-ms-fullscreen .presentation-view {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: 9999;
+  display: flex;
+  flex-direction: column;
   background: #0d0d0d;
+  z-index: 1000;
 }
 
-:fullscreen .editor-pane,
-:-webkit-full-screen .editor-pane,
-:-moz-full-screen .editor-pane,
-:-ms-fullscreen .editor-pane {
-  display: none;
-}
-
-:fullscreen .preview-header,
-:-webkit-full-screen .preview-header,
-:-moz-full-screen .preview-header,
-:-ms-fullscreen .preview-header {
-  display: none;
-}
-
-:fullscreen #preview-output,
-:-webkit-full-screen #preview-output,
-:-moz-full-screen #preview-output,
-:-ms-fullscreen #preview-output {
-  display: none;
+/* Fullscreen styles - increase z-index when in actual fullscreen */
+:fullscreen .presentation-view,
+:-webkit-full-screen .presentation-view,
+:-moz-full-screen .presentation-view,
+:-ms-fullscreen .presentation-view {
+  z-index: 9999;
 }
 
 .slide-container {
@@ -278,12 +256,14 @@ h2 {
   justify-content: center;
   padding: 40px;
   overflow-y: auto;
+  width: 100%;
 }
 
 #slide-content {
-  max-width: 900px;
+  max-width: 90%;
   width: 100%;
   animation: slideIn 0.3s ease-out;
+  font-size: 1.2em;
 }
 
 @keyframes slideIn {
@@ -298,19 +278,19 @@ h2 {
 }
 
 #slide-content h1 {
-  font-size: 3em;
+  font-size: 4.5em;
   color: #569cd6;
   margin-bottom: 0.5em;
   text-align: center;
-  border-bottom: 3px solid #3e3e3e;
+  border-bottom: 4px solid #3e3e3e;
   padding-bottom: 0.3em;
 }
 
 #slide-content h2 {
-  font-size: 2.2em;
+  font-size: 3.5em;
   color: #4ec9b0;
-  margin-top: 0.8em;
-  margin-bottom: 0.5em;
+  margin-top: 0.6em;
+  margin-bottom: 0.4em;
   text-align: center;
   background: transparent;
   border: none;
@@ -320,41 +300,61 @@ h2 {
 }
 
 #slide-content h3 {
-  font-size: 1.8em;
+  font-size: 2.8em;
   color: #c586c0;
-  margin-top: 0.7em;
-  margin-bottom: 0.5em;
+  margin-top: 0.5em;
+  margin-bottom: 0.4em;
   text-align: center;
 }
 
 #slide-content p {
-  font-size: 1.3em;
-  line-height: 1.6;
-  margin-bottom: 1em;
+  font-size: 1.8em;
+  line-height: 1.5;
+  margin-bottom: 0.8em;
 }
 
 #slide-content ul, #slide-content ol {
-  font-size: 1.2em;
+  font-size: 1.6em;
   line-height: 1.8;
-  margin-left: 40px;
+  margin-left: 60px;
   margin-bottom: 1em;
 }
 
+#slide-content li {
+  margin-bottom: 0.5em;
+}
+
 #slide-content code {
-  font-size: 1.1em;
+  font-size: 1.2em;
+  padding: 4px 8px;
 }
 
 #slide-content pre {
-  font-size: 1.1em;
-  padding: 20px;
-  margin: 20px 0;
+  font-size: 1.4em;
+  padding: 30px;
+  margin: 30px 0;
+  border-radius: 8px;
 }
 
 #slide-content blockquote {
-  font-size: 1.2em;
+  font-size: 1.6em;
   font-style: italic;
-  margin: 20px 0;
-  padding-left: 20px;
+  margin: 30px 0;
+  padding-left: 30px;
+  border-left: 5px solid #569cd6;
+}
+
+#slide-content table {
+  width: 100%;
+  font-size: 1.4em;
+  margin: 30px 0;
+}
+
+#slide-content img {
+  max-width: 80%;
+  height: auto;
+  display: block;
+  margin: 30px auto;
 }
 
 .slide-controls {
@@ -362,9 +362,10 @@ h2 {
   justify-content: center;
   align-items: center;
   gap: 20px;
-  padding: 16px;
-  background: #2d2d30;
-  border-top: 1px solid #3e3e3e;
+  padding: 12px;
+  background: rgba(45, 45, 48, 0.9);
+  border-top: 1px solid rgba(62, 62, 62, 0.5);
+  backdrop-filter: blur(10px);
 }
 
 .slide-nav {
@@ -394,4 +395,25 @@ h2 {
   font-weight: 600;
   min-width: 80px;
   text-align: center;
+}
+
+.presentation-hint {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #9cdcfe;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  z-index: 10000;
+  animation: fadeInOut 3s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
 }

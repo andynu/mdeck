@@ -57,16 +57,31 @@ async function togglePresentationMode() {
   isPresentation = !isPresentation;
 
   const toggleBtn = document.getElementById('toggle-mode');
+  const editorPane = document.querySelector('.editor-pane');
+  const previewPane = document.querySelector('.preview-pane');
 
   if (isPresentation) {
-    previewOutput.classList.add('hidden');
+    // Hide the entire editor and preview panes
+    editorPane.classList.add('hidden');
+    previewPane.classList.add('hidden');
     presentationView.classList.remove('hidden');
-    toggleBtn.textContent = 'Exit Fullscreen';
+    toggleBtn.textContent = 'Exit Presentation';
     toggleBtn.classList.add('active');
 
     slides = parseSlides(markdownInput.value);
     currentSlide = 0;
     renderSlide(currentSlide);
+
+    // Show hint about how to exit
+    const hint = document.createElement('div');
+    hint.className = 'presentation-hint';
+    hint.textContent = 'Press ESC to exit presentation';
+    document.body.appendChild(hint);
+    setTimeout(() => {
+      if (hint.parentNode) {
+        hint.remove();
+      }
+    }, 3000);
 
     // Request fullscreen on the presentation view container
     try {
@@ -90,7 +105,12 @@ function exitPresentationMode() {
   isPresentation = false;
 
   const toggleBtn = document.getElementById('toggle-mode');
-  previewOutput.classList.remove('hidden');
+  const editorPane = document.querySelector('.editor-pane');
+  const previewPane = document.querySelector('.preview-pane');
+
+  // Restore editor and preview panes
+  editorPane.classList.remove('hidden');
+  previewPane.classList.remove('hidden');
   presentationView.classList.add('hidden');
   toggleBtn.textContent = 'Presentation Mode';
   toggleBtn.classList.remove('active');
