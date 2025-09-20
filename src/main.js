@@ -256,14 +256,78 @@ async function exportToPDF() {
     document.body.removeChild(tempContainer);
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-    pdf.save(`presentation_${timestamp}.pdf`);
+    const filename = `presentation_${timestamp}.pdf`;
+    pdf.save(filename);
+
+    // Show success message
+    exportBtn.textContent = '✓ PDF Saved!';
+    exportBtn.style.background = '#28a745';
+
+    // Create a temporary notification
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #28a745;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease;
+      font-size: 14px;
+    `;
+    notification.innerHTML = `
+      <strong>PDF Downloaded!</strong><br>
+      <small>${filename} saved to your Downloads folder</small>
+    `;
+    document.body.appendChild(notification);
+
+    // Add slide-in animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Remove notification after 5 seconds
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease';
+      notification.style.animationFillMode = 'forwards';
+
+      // Add slide-out animation
+      const slideOutStyle = document.createElement('style');
+      slideOutStyle.textContent = `
+        @keyframes slideOut {
+          from { transform: translateX(0); opacity: 1; }
+          to { transform: translateX(400px); opacity: 0; }
+        }
+      `;
+      document.head.appendChild(slideOutStyle);
+
+      setTimeout(() => {
+        document.body.removeChild(notification);
+      }, 300);
+    }, 5000);
+
+    // Reset button after 3 seconds
+    setTimeout(() => {
+      exportBtn.style.background = '';
+      exportBtn.textContent = 'Export PDF';
+    }, 3000);
 
   } catch (error) {
     console.error('Error generating PDF:', error);
     alert('Error generating PDF. Please check the console for details.');
   } finally {
     exportBtn.disabled = false;
-    exportBtn.textContent = 'Export PDF';
+    if (exportBtn.textContent === 'Generating PDF...') {
+      exportBtn.textContent = 'Export PDF';
+    }
   }
 }
 
