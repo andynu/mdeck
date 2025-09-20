@@ -1,5 +1,6 @@
 // marked, jsPDF and html2canvas are loaded globally from CDN
 const { invoke } = window.__TAURI__.core;
+const { listen } = window.__TAURI__.event;
 
 let markdownInput;
 let previewOutput;
@@ -13,6 +14,7 @@ let currentFilePath = null;
 let markedRenderer = null;
 let isPreviewVisible = true;
 let isMiniPresentation = false;
+let fileChangeUnlistener = null;
 
 function parseSlides(markdown) {
   const slideDelimiter = /^---+$/gm;
@@ -225,19 +227,9 @@ function handleWheelNavigation(e) {
   }
 }
 
-async function openFile() {
-  try {
-    const selected = await window.TauriDialog.open({
-      multiple: false,
-      filters: [{
-        name: 'Markdown',
-        extensions: ['md', 'markdown']
-      }]
-    });
-
-    if (selected) {
-      const content = await invoke('read_file', { path: selected });
-      currentFilePath = selected;
+async function loadFileContent(filePath) {
+  const content = await invoke('read_file', { path: filePath });
+  currentFilePath = filePath;
 
       // Create a custom renderer for handling image paths
       markedRenderer = new marked.Renderer();
@@ -301,11 +293,96 @@ async function openFile() {
         markdownInput.value = content;
         updatePreview();
       });
+}
+
+async function openFile() {
+  try {
+    const selected = await window.TauriDialog.open({
+      multiple: false,
+      filters: [{
+        name: 'Markdown',
+        extensions: ['md', 'markdown']
+      }]
+    });
+
+    if (selected) {
+      await loadFileContent(selected);
+
+      // Stop any existing file watcher
+      if (fileChangeUnlistener) {
+        fileChangeUnlistener();
+        fileChangeUnlistener = null;
+      }
+
+      // Start watching the new file
+      await invoke('start_watching_file', { filePath: selected });
+
+      // Listen for file changes
+      fileChangeUnlistener = await listen('file-changed', async (event) => {
+        console.log('File changed, reloading...', event.payload);
+
+        // Store current cursor position and scroll position
+        const cursorPos = markdownInput.selectionStart;
+        const scrollPos = markdownInput.scrollTop;
+        const previewScrollPos = previewOutput.scrollTop;
+
+        // Reload the file content
+        await loadFileContent(event.payload);
+
+        // Restore cursor and scroll positions
+        markdownInput.selectionStart = cursorPos;
+        markdownInput.selectionEnd = cursorPos;
+        markdownInput.scrollTop = scrollPos;
+        previewOutput.scrollTop = previewScrollPos;
+
+        // Show a subtle notification
+        showReloadNotification();
+      });
     }
   } catch (error) {
     console.error('Error opening file:', error);
     alert('Error opening file: ' + error);
   }
+}
+
+function showReloadNotification() {
+  const existing = document.querySelector('.reload-notification');
+  if (existing) {
+    existing.remove();
+  }
+
+  const notification = document.createElement('div');
+  notification.className = 'reload-notification';
+  notification.style.cssText = `
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 10000;
+    animation: fadeInOut 2s ease;
+  `;
+  notification.textContent = 'File reloaded';
+  document.body.appendChild(notification);
+
+  // Add animation
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-10px); }
+      20% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-10px); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  setTimeout(() => {
+    notification.remove();
+  }, 2000);
 }
 
 function togglePreview() {
@@ -714,4 +791,12 @@ Toggle between **Editor Mode** and **Presentation Mode** using the button above!
 
   markdownInput.value = initialContent;
   updatePreview();
+
+  // Clean up file watcher when closing
+  window.addEventListener('beforeunload', async () => {
+    if (fileChangeUnlistener) {
+      fileChangeUnlistener();
+      await invoke('stop_watching_file');
+    }
+  });
 });

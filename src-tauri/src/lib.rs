@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::Path;
 use tauri::command;
+use tauri::{AppHandle, Emitter, Manager};
+use notify::{Watcher, RecursiveMode, Event};
+use std::sync::Mutex;
 
 #[command]
 fn read_file(path: String) -> Result<String, String> {
@@ -41,12 +44,62 @@ fn resolve_path(base_path: String, relative_path: String) -> Result<String, Stri
         .ok_or_else(|| "Failed to convert path to string".to_string())
 }
 
+struct WatcherState(Mutex<Option<notify::RecommendedWatcher>>);
+
+#[command]
+fn start_watching_file(app: AppHandle, file_path: String) -> Result<(), String> {
+    let state = app.state::<WatcherState>();
+    let mut watcher_guard = state.0.lock().unwrap();
+
+    // Stop any existing watcher
+    if watcher_guard.is_some() {
+        *watcher_guard = None;
+    }
+
+    let app_handle = app.clone();
+    let watch_path = file_path.clone();
+
+    let mut watcher = notify::recommended_watcher(move |result: Result<Event, notify::Error>| {
+        match result {
+            Ok(event) => {
+                // Only emit on write events to avoid too many notifications
+                if event.kind.is_modify() {
+                    let _ = app_handle.emit("file-changed", &watch_path);
+                }
+            }
+            Err(e) => eprintln!("Watch error: {:?}", e),
+        }
+    }).map_err(|e| format!("Failed to create watcher: {}", e))?;
+
+    // Watch the specific file
+    watcher.watch(Path::new(&file_path), RecursiveMode::NonRecursive)
+        .map_err(|e| format!("Failed to watch file: {}", e))?;
+
+    *watcher_guard = Some(watcher);
+    Ok(())
+}
+
+#[command]
+fn stop_watching_file(app: AppHandle) -> Result<(), String> {
+    let state = app.state::<WatcherState>();
+    let mut watcher_guard = state.0.lock().unwrap();
+    *watcher_guard = None;
+    Ok(())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
-        .invoke_handler(tauri::generate_handler![read_file, read_image_as_base64, resolve_path])
+        .manage(WatcherState(Mutex::new(None)))
+        .invoke_handler(tauri::generate_handler![
+            read_file,
+            read_image_as_base64,
+            resolve_path,
+            start_watching_file,
+            stop_watching_file
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
