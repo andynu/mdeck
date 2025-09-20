@@ -1,6 +1,4 @@
-import { marked } from 'marked';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+// marked, jsPDF and html2canvas are loaded globally from CDN
 
 let markdownInput;
 let previewOutput;
@@ -21,7 +19,7 @@ function renderSlide(slideIndex) {
   if (slideIndex < 0 || slideIndex >= slides.length) return;
 
   const slideMarkdown = slides[slideIndex];
-  const html = marked(slideMarkdown);
+  const html = marked.parse(slideMarkdown);
   slideContent.innerHTML = html;
 
   document.getElementById('slide-number').textContent = `${slideIndex + 1} / ${slides.length}`;
@@ -42,7 +40,7 @@ function updatePreview() {
     }
     renderSlide(currentSlide);
   } else {
-    const html = marked(markdown);
+    const html = marked.parse(markdown);
     previewOutput.innerHTML = html;
   }
 }
@@ -52,7 +50,7 @@ function debounceUpdate() {
   updateTimer = setTimeout(updatePreview, 150);
 }
 
-function togglePresentationMode() {
+async function togglePresentationMode() {
   isPresentation = !isPresentation;
 
   const toggleBtn = document.getElementById('toggle-mode');
@@ -60,40 +58,109 @@ function togglePresentationMode() {
   if (isPresentation) {
     previewOutput.classList.add('hidden');
     presentationView.classList.remove('hidden');
-    toggleBtn.textContent = 'Editor Mode';
+    toggleBtn.textContent = 'Exit Fullscreen';
     toggleBtn.classList.add('active');
 
     slides = parseSlides(markdownInput.value);
     currentSlide = 0;
     renderSlide(currentSlide);
-  } else {
-    previewOutput.classList.remove('hidden');
-    presentationView.classList.add('hidden');
-    toggleBtn.textContent = 'Presentation Mode';
-    toggleBtn.classList.remove('active');
 
-    updatePreview();
+    // Request fullscreen on the presentation view container
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) { // Safari
+        await elem.webkitRequestFullscreen();
+      } else if (elem.msRequestFullscreen) { // IE11
+        await elem.msRequestFullscreen();
+      }
+    } catch (err) {
+      console.log('Fullscreen request failed:', err);
+    }
+  } else {
+    exitPresentationMode();
   }
+}
+
+function exitPresentationMode() {
+  isPresentation = false;
+
+  const toggleBtn = document.getElementById('toggle-mode');
+  previewOutput.classList.remove('hidden');
+  presentationView.classList.add('hidden');
+  toggleBtn.textContent = 'Presentation Mode';
+  toggleBtn.classList.remove('active');
+
+  // Exit fullscreen
+  if (document.exitFullscreen) {
+    document.exitFullscreen().catch(() => {});
+  } else if (document.webkitExitFullscreen) { // Safari
+    document.webkitExitFullscreen();
+  } else if (document.msExitFullscreen) { // IE11
+    document.msExitFullscreen();
+  }
+
+  updatePreview();
 }
 
 function handleKeyNavigation(e) {
   if (!isPresentation) return;
 
   if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+    e.preventDefault();
     if (currentSlide > 0) {
       renderSlide(currentSlide - 1);
     }
   } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+    e.preventDefault();
     if (currentSlide < slides.length - 1) {
-      e.preventDefault();
+      renderSlide(currentSlide + 1);
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (currentSlide > 0) {
+      renderSlide(currentSlide - 1);
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (currentSlide < slides.length - 1) {
       renderSlide(currentSlide + 1);
     }
   } else if (e.key === 'Home') {
+    e.preventDefault();
     renderSlide(0);
   } else if (e.key === 'End') {
+    e.preventDefault();
     renderSlide(slides.length - 1);
   } else if (e.key === 'Escape') {
+    exitPresentationMode();
+  } else if (e.key === 'f' || e.key === 'F') {
+    e.preventDefault();
     togglePresentationMode();
+  }
+}
+
+function handleWheelNavigation(e) {
+  if (!isPresentation) return;
+
+  e.preventDefault();
+
+  // Debounce wheel events to avoid too rapid scrolling
+  if (handleWheelNavigation.scrolling) return;
+  handleWheelNavigation.scrolling = true;
+  setTimeout(() => { handleWheelNavigation.scrolling = false; }, 300);
+
+  if (e.deltaY > 0) {
+    // Scrolling down - next slide
+    if (currentSlide < slides.length - 1) {
+      renderSlide(currentSlide + 1);
+    }
+  } else if (e.deltaY < 0) {
+    // Scrolling up - previous slide
+    if (currentSlide > 0) {
+      renderSlide(currentSlide - 1);
+    }
   }
 }
 
@@ -103,7 +170,7 @@ async function exportToPDF() {
   exportBtn.textContent = 'Generating PDF...';
 
   try {
-    const pdf = new jsPDF({
+    const pdf = new window.jspdf.jsPDF({
       orientation: 'landscape',
       unit: 'mm',
       format: 'a4'
@@ -135,7 +202,7 @@ async function exportToPDF() {
           flex-direction: column;
           justify-content: center;
         ">
-          ${marked(slideTexts[i])}
+          ${marked.parse(slideTexts[i])}
         </div>
       `;
 
@@ -214,6 +281,21 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById('export-pdf').addEventListener('click', exportToPDF);
 
   document.addEventListener('keydown', handleKeyNavigation);
+  document.addEventListener('wheel', handleWheelNavigation, { passive: false });
+
+  // Handle fullscreen changes (e.g., user presses ESC to exit fullscreen)
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement && isPresentation) {
+      exitPresentationMode();
+    }
+  });
+
+  // For Safari
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!document.webkitFullscreenElement && isPresentation) {
+      exitPresentationMode();
+    }
+  });
 
   const initialContent = `# Welcome to Markdown Editor
 
@@ -225,17 +307,37 @@ This is a **live preview** markdown editor built with Tauri!
 - Syntax highlighting
 - Dark theme
 - Split pane view
-- **NEW: Presentation mode!**
+- **NEW: Fullscreen presentation mode!**
+- **PDF Export** - Save your presentations as PDF
 
 ---
 
 # Presentation Mode
 
+**Now with Fullscreen Support!**
+
 Use three dashes (---) to separate slides
 
-- Navigate with arrow keys or buttons
-- Press Escape to exit presentation
-- Space bar or Page Down for next slide
+## Navigation Options:
+
+- **Keyboard:** Arrow keys (↑↓←→), Space, Page Up/Down
+- **Mouse:** Scroll wheel up/down
+- **Shortcuts:**
+  - Press **F** to toggle fullscreen
+  - Press **Escape** to exit presentation
+  - **Home/End** for first/last slide
+
+---
+
+## PDF Export
+
+Click the "Export PDF" button to save your presentation as a PDF file.
+
+Each slide becomes a page in the PDF with:
+- Centered headings
+- Proper image scaling
+- Code block formatting
+- Professional layout
 
 ---
 

@@ -234,6 +234,41 @@ h2 {
   background: #1e1e1e;
 }
 
+/* Fullscreen styles */
+:fullscreen .presentation-view,
+:-webkit-full-screen .presentation-view,
+:-moz-full-screen .presentation-view,
+:-ms-fullscreen .presentation-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: #0d0d0d;
+}
+
+:fullscreen .editor-pane,
+:-webkit-full-screen .editor-pane,
+:-moz-full-screen .editor-pane,
+:-ms-fullscreen .editor-pane {
+  display: none;
+}
+
+:fullscreen .preview-header,
+:-webkit-full-screen .preview-header,
+:-moz-full-screen .preview-header,
+:-ms-fullscreen .preview-header {
+  display: none;
+}
+
+:fullscreen #preview-output,
+:-webkit-full-screen #preview-output,
+:-moz-full-screen #preview-output,
+:-ms-fullscreen #preview-output {
+  display: none;
+}
+
 .slide-container {
   flex: 1;
   display: flex;
