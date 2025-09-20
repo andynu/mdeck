@@ -11,6 +11,7 @@ let currentSlide = 0;
 let isPresentation = false;
 let currentFilePath = null;
 let markedRenderer = null;
+let isPreviewVisible = true;
 
 function parseSlides(markdown) {
   const slideDelimiter = /^---+$/gm;
@@ -270,6 +271,26 @@ async function openFile() {
   }
 }
 
+function togglePreview() {
+  isPreviewVisible = !isPreviewVisible;
+  const previewPane = document.querySelector('.preview-pane');
+  const editorPane = document.querySelector('.editor-pane');
+  const toggleBtn = document.getElementById('toggle-preview');
+
+  if (isPreviewVisible) {
+    previewPane.classList.remove('hidden');
+    editorPane.classList.remove('full-width');
+    toggleBtn.textContent = '👁️';
+    toggleBtn.title = 'Hide Preview (Ctrl+Shift+P)';
+    updatePreview();
+  } else {
+    previewPane.classList.add('hidden');
+    editorPane.classList.add('full-width');
+    toggleBtn.textContent = '👁️‍🗨️';
+    toggleBtn.title = 'Show Preview (Ctrl+Shift+P)';
+  }
+}
+
 async function exportToPDF() {
   const exportBtn = document.getElementById('export-pdf');
   exportBtn.disabled = true;
@@ -467,8 +488,17 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById('next-slide').addEventListener('click', () => renderSlide(currentSlide + 1));
   document.getElementById('export-pdf').addEventListener('click', exportToPDF);
   document.getElementById('open-file').addEventListener('click', openFile);
+  document.getElementById('toggle-preview').addEventListener('click', togglePreview);
 
-  document.addEventListener('keydown', handleKeyNavigation);
+  document.addEventListener('keydown', (e) => {
+    // Add Ctrl+Shift+P to toggle preview
+    if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+      e.preventDefault();
+      togglePreview();
+    } else {
+      handleKeyNavigation(e);
+    }
+  });
   document.addEventListener('wheel', handleWheelNavigation, { passive: false });
 
   // Handle fullscreen changes (e.g., user presses ESC to exit fullscreen)

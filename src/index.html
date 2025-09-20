@@ -17,17 +17,20 @@
   <body>
     <div class="editor-container">
       <div class="editor-pane">
-        <h2>Markdown</h2>
+        <div class="editor-header">
+          <h2>Markdown</h2>
+          <div class="header-buttons">
+            <button id="open-file" class="open-btn">Open File</button>
+            <button id="export-pdf" class="export-btn">Export PDF</button>
+            <button id="toggle-mode" class="mode-toggle">Presentation Mode</button>
+            <button id="toggle-preview" class="preview-toggle" title="Toggle Preview (Ctrl+Shift+P)">👁️</button>
+          </div>
+        </div>
         <textarea id="markdown-input" placeholder="Type your markdown here..."></textarea>
       </div>
       <div class="preview-pane">
         <div class="preview-header">
           <h2>Preview</h2>
-          <div class="header-buttons">
-            <button id="open-file" class="open-btn">Open File</button>
-            <button id="export-pdf" class="export-btn">Export PDF</button>
-            <button id="toggle-mode" class="mode-toggle">Presentation Mode</button>
-          </div>
         </div>
         <div id="preview-output"></div>
       </div>

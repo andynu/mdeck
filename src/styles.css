@@ -26,6 +26,37 @@ body {
 
 .editor-pane {
   border-right: 1px solid #3e3e3e;
+  transition: flex 0.3s ease;
+}
+
+.editor-pane.full-width {
+  flex: 1 1 100%;
+  border-right: none;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2d2d30;
+  border-bottom: 1px solid #3e3e3e;
+}
+
+.preview-toggle {
+  padding: 6px 10px;
+  background: transparent;
+  color: #d4d4d4;
+  border: 1px solid #3e3e3e;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  margin-left: auto;
+}
+
+.preview-toggle:hover {
+  background: #3c3c3c;
+  border-color: #007acc;
 }
 
 .preview-header {
